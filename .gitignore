@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Model artefacts (regenerate with the training commands)
+models/
+*.weights.h5
+*.h5
+
+# Run outputs
+outputs/
+examples/output/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

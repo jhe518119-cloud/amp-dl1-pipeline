@@ -1,0 +1,11 @@
+name: amp-dl1
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy>=1.21
+  - pandas>=1.3
+  - pip
+  - pip:
+      - tensorflow>=2.11,<2.16

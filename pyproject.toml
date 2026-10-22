@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amppipeline"
+version = "1.0.0"
+description = "Open re-implementation of the AMP-DL1 deep-learning peptide design pipeline"
+readme = "README.md"
+requires-python = ">=3.9,<3.12"
+license = { text = "MIT" }
+authors = [{ name = "Jie He" }, { name = "Hongxia Ma" }]
+dependencies = [
+    "numpy>=1.21",
+    "pandas>=1.3",
+    "tensorflow>=2.11,<2.16",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+ampdl = "amppipeline.cli:main"
+
+[tool.setuptools]
+packages = ["amppipeline"]
