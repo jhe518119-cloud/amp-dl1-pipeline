@@ -139,12 +139,16 @@ def build_vae(config: Dict[str, object] | None = None):
     hidden = layers.GRU(
         gru_units, return_sequences=True, name="decoder_gru"
     )(hidden)
-    outputs = layers.Dense(
+    decoder_outputs = layers.Dense(
         len(ALPHABET), activation="softmax", name="amino_acid_probabilities"
     )(hidden)
 
-    decoder = keras.Model(decoder_input, outputs, name="vae_decoder")
-    vae = keras.Model(inputs, outputs, name="vae")
+    decoder = keras.Model(decoder_input, decoder_outputs, name="vae_decoder")
+    # Connect the decoder to the sampled latent vector; without this call the
+    # decoder graph would remain attached to its own `latent` input and the VAE
+    # graph would be disconnected.
+    reconstruction = decoder(z)
+    vae = keras.Model(inputs, reconstruction, name="vae")
 
     # Reconstruction and KL terms. The reconstruction term is the sum of
     # per-position binary cross-entropies; the KL term is summed over latent
@@ -153,12 +157,14 @@ def build_vae(config: Dict[str, object] | None = None):
     # KerasTensors on Keras 2.x.
     from tensorflow.keras import backend as K
 
-    reconstruction = K.sum(K.binary_crossentropy(inputs, outputs), axis=-1)
+    reconstruction_loss = K.sum(
+        K.binary_crossentropy(inputs, reconstruction), axis=-1
+    )
     kl_divergence = -0.5 * K.sum(
         1.0 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1
     )
-    vae.add_loss(K.mean(reconstruction + beta * kl_divergence))
-    vae.add_metric(K.mean(reconstruction), name="reconstruction")
+    vae.add_loss(K.mean(reconstruction_loss + beta * kl_divergence))
+    vae.add_metric(K.mean(reconstruction_loss), name="reconstruction")
     vae.add_metric(K.mean(kl_divergence), name="kl")
     vae.compile(optimizer=keras.optimizers.Adam(learning_rate=float(config["learning_rate"])))
     return vae, decoder, config
