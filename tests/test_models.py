@@ -35,6 +35,27 @@ class VaeTests(unittest.TestCase):
         decoded = decoder.predict(latent, verbose=0)
         self.assertEqual(decoded.shape, (3, 10, 21))
 
+    def test_single_training_step(self):
+        """A one-step fit catches loss-shape errors that build/forward misses."""
+        from amppipeline.vae import build_vae
+
+        config = {
+            "max_len": 10,
+            "latent_dim": 8,
+            "encoder_filters": [4, 8, 8, 8, 8],
+            "decoder_start_len": 5,
+            "decoder_channels": 4,
+            "decoder_filters": [4, 8, 8, 8],
+            "decoder_strides": [1, 2, 1, 1],
+            "gru_units": 8,
+        }
+        vae, _, _ = build_vae(config)
+        encoded = np.zeros((2, 10, 21), dtype=np.float32)
+        encoded[:, :, 0] = 1.0
+        history = vae.fit(encoded, epochs=1, batch_size=2, verbose=0)
+        self.assertIn("loss", history.history)
+        self.assertTrue(np.isfinite(history.history["loss"][0]))
+
     def test_mismatched_decoder_geometry_raises(self):
         from amppipeline.vae import build_vae
 

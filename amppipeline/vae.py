@@ -157,8 +157,12 @@ def build_vae(config: Dict[str, object] | None = None):
     # KerasTensors on Keras 2.x.
     from tensorflow.keras import backend as K
 
+    # In Keras 2, backend.binary_crossentropy returns the elementwise loss
+    # tensor (batch, max_len, alphabet), so both the position and the
+    # amino-acid axes must be summed; summing only the last axis would leave a
+    # (batch, max_len) tensor that cannot be added to the (batch,) KL term.
     reconstruction_loss = K.sum(
-        K.binary_crossentropy(inputs, reconstruction), axis=-1
+        K.binary_crossentropy(inputs, reconstruction), axis=(-1, -2)
     )
     kl_divergence = -0.5 * K.sum(
         1.0 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1
